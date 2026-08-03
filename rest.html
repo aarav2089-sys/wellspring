@@ -492,5 +492,271 @@ window.addEventListener("click", (event) => {
     });
 });
 </script>
+    <button class="launcher" id="launcherBtn" aria-label="Open wellness chat" aria-expanded="false">
+  <span class="launcher-dot" id="launcherDot"></span>
+  <svg class="icon-chat" width="26" height="26" viewBox="0 0 24 24" fill="none">
+    <path d="M12 2C7 2 3 6 3 12c0 5 4 9 9 9 0-5 0-9 0-9s5-1 5-5-5-5-5-5z" fill="#ffffff"/>
+  </svg>
+  <svg class="icon-close" width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <path d="M4 4l16 16M20 4L4 20" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round"/>
+  </svg>
+</button>
+
+<div class="app" id="appPanel" role="dialog" aria-label="Sage wellness chatbot">
+  <header class="app-header">
+    <svg class="vine" viewBox="0 0 200 200" fill="none">
+      <path d="M10 190 C 60 160, 40 100, 90 90 C 140 80, 130 30, 180 10" stroke="#eef5f1" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="90" cy="90" r="6" fill="#eef5f1"/>
+      <circle cx="180" cy="10" r="5" fill="#eef5f1"/>
+      <circle cx="10" cy="190" r="5" fill="#eef5f1"/>
+    </svg>
+    <div class="brand">
+      <div class="leaf-badge">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2C7 2 3 6 3 12c0 5 4 9 9 9 0-5 0-9 0-9s5-1 5-5-5-5-5-5z" fill="#1b4332" opacity="0.85"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Sage · Wellness Companion</h1>
+        <p><span class="status-dot"></span>online &amp; listening</p>
+      </div>
+    </div>
+    <div class="disclaimer">
+      🌿 I share general wellness information, not medical diagnoses. For symptoms, emergencies, or personal treatment decisions, please consult a licensed clinician.
+    </div>
+    <button class="close-btn" id="closeBtn" aria-label="Close chat">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 4l16 16M20 4L4 20" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+    </button>
+  </header>
+
+  <div class="chat-window" id="chatWindow"></div>
+
+  <div class="chips" id="chips">
+    <button class="chip" data-q="How much water should I drink daily?">💧 Hydration</button>
+    <button class="chip" data-q="Give me tips for better sleep">🌙 Sleep</button>
+    <button class="chip" data-q="How can I eat healthier?">🥗 Nutrition</button>
+    <button class="chip" data-q="I feel stressed lately">🧘 Stress</button>
+    <button class="chip" data-q="What's a good beginner exercise routine?">🏃 Exercise</button>
+    <button class="chip" data-q="I have a headache">🤕 Symptom check</button>
+  </div>
+
+  <div class="input-bar">
+    <input id="userInput" type="text" placeholder="Ask about sleep, food, stress, symptoms…" autocomplete="off">
+    <button class="send-btn" id="sendBtn" aria-label="Send message">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M3 12l17-8-6 17-3-7-8-2z" fill="currentColor"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const chatWindow = document.getElementById('chatWindow');
+  const input = document.getElementById('userInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const chips = document.getElementById('chips');
+  const launcherBtn = document.getElementById('launcherBtn');
+  const launcherDot = document.getElementById('launcherDot');
+  const closeBtn = document.getElementById('closeBtn');
+  const appPanel = document.getElementById('appPanel');
+  let hasGreeted = false;
+  let isOpen = false;
+
+  function openPanel(){
+    isOpen = true;
+    appPanel.classList.add('open');
+    launcherBtn.classList.add('open');
+    launcherBtn.setAttribute('aria-expanded', 'true');
+    launcherDot.style.display = 'none';
+    if(!hasGreeted){
+      hasGreeted = true;
+      addMessage(`<span class="msg-label">Sage</span>
+        Hi there 🌿 I'm Sage, a health &amp; wellness chatbot focused on everyday habits — sleep, food, movement, stress, and general symptom info. What's on your mind today?`, 'bot', false);
+    }
+    setTimeout(() => input.focus(), 200);
+  }
+  function closePanel(){
+    isOpen = false;
+    appPanel.classList.remove('open');
+    launcherBtn.classList.remove('open');
+    launcherBtn.setAttribute('aria-expanded', 'false');
+  }
+  launcherBtn.addEventListener('click', () => isOpen ? closePanel() : openPanel());
+  closeBtn.addEventListener('click', closePanel);
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && isOpen) closePanel(); });
+
+  // ---------- knowledge base ----------
+  const topics = [
+    {
+      key: 'emergency',
+      test: t => /\b(suicide|kill myself|end my life|want to die|self.?harm|chest pain|can'?t breathe|cannot breathe|severe bleeding|overdose|stroke|heart attack)\b/.test(t),
+      emergency: true,
+      reply: `<span class="msg-label">Please read this</span>
+        If you're in immediate danger, having chest pain, trouble breathing, or thoughts of harming yourself, please contact emergency services right now (911 in the US, or your local emergency number).<br><br>
+        If this is about suicidal thoughts, you can also reach the <strong>988 Suicide &amp; Crisis Lifeline</strong> (call or text 988 in the US) any time, day or night. You deserve support, and trained people are ready to help.`
+    },
+    {
+      key: 'hydration',
+      test: t => /\bwater|hydrat|thirsty|dehydrat/.test(t),
+      reply: `<span class="msg-label">Hydration</span>
+        A commonly used guideline is about 8 cups (roughly 2 liters) a day, though needs shift with activity level, heat, and body size.
+        <ul>
+          <li>Keep a bottle within reach as a visual cue</li>
+          <li>Pale yellow urine is a decent hydration signal</li>
+          <li>Water-rich foods (cucumber, watermelon, oranges) count too</li>
+          <li>Increase intake with exercise, heat, or illness</li>
+        </ul>`
+    },
+    {
+      key: 'sleep',
+      test: t => /\bsleep|insomnia|tired|rest|nap|bedtime/.test(t),
+      reply: `<span class="msg-label">Sleep</span>
+        Most adults do best with 7–9 hours nightly. A few habits that tend to help:
+        <ul>
+          <li>Keep a consistent wake-up time, even on weekends</li>
+          <li>Dim lights and screens 1 hour before bed</li>
+          <li>Keep the room cool, dark, and quiet</li>
+          <li>Skip caffeine after early afternoon</li>
+        </ul>
+        If poor sleep persists for weeks, it's worth mentioning to a doctor.`
+    },
+    {
+      key: 'nutrition',
+      test: t => /\bnutrition|diet|eat|food|meal|vegetable|healthy eating/.test(t),
+      reply: `<span class="msg-label">Nutrition</span>
+        A simple, sustainable pattern beats a strict one:
+        <ul>
+          <li>Fill half your plate with vegetables or fruit</li>
+          <li>Choose whole grains over refined ones when you can</li>
+          <li>Include a protein source at each meal</li>
+          <li>Limit ultra-processed snacks and sugary drinks</li>
+        </ul>
+        For a plan tailored to a health condition, a registered dietitian is the best resource.`
+    },
+    {
+      key: 'exercise',
+      test: t => /\bexercise|workout|fitness|gym|run|walk|strength|cardio/.test(t),
+      reply: `<span class="msg-label">Movement</span>
+        General guidelines suggest ~150 minutes of moderate activity a week, plus 2 strength sessions.
+        <ul>
+          <li>Start with brisk 20–30 min walks, most days</li>
+          <li>Add 2 short bodyweight sessions (squats, push-ups, planks)</li>
+          <li>Increase duration/intensity gradually to avoid injury</li>
+          <li>Rest days matter as much as workout days</li>
+        </ul>
+        Check with a doctor first if you have an existing condition or haven't exercised in a while.`
+    },
+    {
+      key: 'stress',
+      test: t => /\bstress|anxious|anxiety|overwhelm|burnout|calm|mental health/.test(t),
+      reply: `<span class="msg-label">Stress &amp; mind</span>
+        It's common for stress to build up quietly. A few grounding tools:
+        <ul>
+          <li>Slow breathing: in for 4, hold 4, out for 6</li>
+          <li>Short daily walks, ideally outdoors</li>
+          <li>Naming the feeling out loud or in writing</li>
+          <li>Talking to someone you trust</li>
+        </ul>
+        If stress feels constant or overwhelming, a therapist or counselor can offer real support — that's a sign of strength, not failure.`
+    },
+    {
+      key: 'headache',
+      test: t => /\bheadache|migraine/.test(t),
+      reply: `<span class="msg-label">Headache — general info</span>
+        Common everyday triggers include dehydration, skipped meals, poor sleep, screen strain, and tension.
+        <ul>
+          <li>Drink a glass of water and rest your eyes</li>
+          <li>Try a short break in a dim, quiet space</li>
+          <li>Gentle neck/shoulder stretches can help tension headaches</li>
+        </ul>
+        See a doctor promptly for a headache that's sudden and severe, follows a head injury, or comes with confusion, stiff neck, or vision changes.`
+    },
+    {
+      key: 'cold',
+      test: t => /\bcold|flu|cough|sore throat|runny nose|fever/.test(t),
+      reply: `<span class="msg-label">Cold &amp; flu-type symptoms</span>
+        Most mild cases improve with rest and self-care:
+        <ul>
+          <li>Fluids (water, broth, herbal tea)</li>
+          <li>Extra sleep to support recovery</li>
+          <li>Warm salt-water gargle for a sore throat</li>
+          <li>Humidified air for congestion</li>
+        </ul>
+        See a doctor if fever is high or lasts several days, or breathing becomes difficult.`
+    },
+    {
+      key: 'greeting',
+      test: t => /\b(hi|hello|hey|good morning|good evening)\b/.test(t),
+      reply: `<span class="msg-label">Sage</span>
+        Hello! 🌱 I'm Sage, your wellness companion. Ask me about sleep, hydration, nutrition, movement, stress, or a symptom you're noticing — or tap a topic below.`
+    },
+    {
+      key: 'thanks',
+      test: t => /\bthank|thanks|appreciate/.test(t),
+      reply: `<span class="msg-label">Sage</span>
+        You're very welcome — taking time to look after yourself is worth it. 🌿`
+    }
+  ];
+
+  const fallback = `<span class="msg-label">Sage</span>
+    I don't have a specific answer for that yet, but I can help with sleep, hydration, nutrition, exercise, stress, or common symptoms. Try one of the topics below, or rephrase your question.`;
+
+  function addMessage(html, sender, isEmergency){
+    const div = document.createElement('div');
+    div.className = 'msg ' + sender + (isEmergency ? ' emergency' : '');
+    div.innerHTML = html;
+    chatWindow.appendChild(div);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
+
+  function showTyping(){
+    const div = document.createElement('div');
+    div.className = 'typing';
+    div.id = 'typingIndicator';
+    div.innerHTML = '<span></span><span></span><span></span>';
+    chatWindow.appendChild(div);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
+  function hideTyping(){
+    const el = document.getElementById('typingIndicator');
+    if(el) el.remove();
+  }
+
+  function respond(text){
+    const t = text.toLowerCase();
+    const match = topics.find(topic => topic.test(t));
+    showTyping();
+    setTimeout(() => {
+      hideTyping();
+      if(match){
+        addMessage(match.reply, 'bot', !!match.emergency);
+      } else {
+        addMessage(fallback, 'bot', false);
+      }
+    }, 500 + Math.random() * 350);
+  }
+
+  function handleSend(text){
+    const value = (text !== undefined ? text : input.value).trim();
+    if(!value) return;
+    addMessage(escapeHtml(value), 'user', false);
+    input.value = '';
+    respond(value);
+  }
+
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  sendBtn.addEventListener('click', () => handleSend());
+  input.addEventListener('keydown', e => { if(e.key === 'Enter') handleSend(); });
+  chips.addEventListener('click', e => {
+    const btn = e.target.closest('.chip');
+    if(btn) handleSend(btn.dataset.q);
+  });
+
+})();
+</script>
     </body>
         </html>
