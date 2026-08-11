@@ -125,20 +125,35 @@
         </div>
 
         <div class="contact-form">
-          <form
-  action="https://formspree.io/f/xeajggpa"
-  method="POST"
->
+          <form action="https://formspree.io/f/xeajggpa" method="POST">
+  <label>Name</label>
+  <input type="text" name="name" required>
+
+  <label>Email</label>
+  <input type="email" name="email" required>
+
+  <label>Phone</label>
+  <input type="tel" name="phone">
+
+  <label>Subject</label>
+  <input type="text" name="subject">
+
+  <label>Message</label>
+  <textarea name="message" required></textarea>
+
+  <label>Category</label>
+  <select name="category">
+    <option value="support">Support</option>
+    <option value="sales">Sales</option>
+    <option value="feedback">Feedback</option>
+  </select>
+
   <label>
-    Your email:
-    <input type="email" name="email">
+    <input type="checkbox" name="newsletter" value="yes">
+    Subscribe to newsletter
   </label>
-  <label>
-    Your message:
-    <textarea name="message"></textarea>
-  </label>
-  <!-- your other form fields go here -->
-  <button type="submit">Send</button>
+
+  <button type="submit">Submit</button>
 </form>
         </div>
 
